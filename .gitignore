@@ -1,0 +1,27 @@
+# secrets
+.env
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# runtime data
+mssql/data/**
+!mssql/data/.gitkeep
+
+mssql/log/**
+!mssql/log/.gitkeep
+
+mssql/secrets/**
+!mssql/secrets/.gitkeep
+
+grafana/data/**
+!grafana/data/.gitkeep
+
+# backups pesados
+mssql/backups/*.bak
+
+# nginx cache o temporales
+app/*.tmp

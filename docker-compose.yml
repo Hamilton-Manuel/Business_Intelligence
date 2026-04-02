@@ -1,0 +1,61 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: bi_sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: ${SQLSERVER_PID}
+      MSSQL_SA_PASSWORD: ${SQLSERVER_SA_PASSWORD}
+      TZ: ${TZ}
+    ports:
+      - "${SQLSERVER_PORT}:1433"
+    volumes:
+      - ./mssql/data:/var/opt/mssql/data
+      - ./mssql/log:/var/opt/mssql/log
+      - ./mssql/secrets:/var/opt/mssql/secrets
+      - ./mssql/backups:/var/opt/mssql/backups
+    networks:
+      - bi_net
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: bi_grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      TZ: ${TZ}
+      GRAFANA_DS_NAME: ${GRAFANA_DS_NAME}
+      GRAFANA_DS_HOST: ${GRAFANA_DS_HOST}
+      GRAFANA_DS_DB: ${GRAFANA_DS_DB}
+      GRAFANA_DS_USER: ${GRAFANA_DS_USER}
+      GRAFANA_DS_PASSWORD: ${GRAFANA_DS_PASSWORD}
+    ports:
+      - "${GRAFANA_PORT}:3000"
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - sqlserver
+    networks:
+      - bi_net
+    restart: unless-stopped
+
+  app:
+    image: nginx:alpine
+    container_name: bi_app
+    ports:
+      - "${APP_PORT}:80"
+    volumes:
+      - ./app:/usr/share/nginx/html:ro
+    depends_on:
+      - grafana
+    networks:
+      - bi_net
+    restart: unless-stopped
+
+networks:
+  bi_net:
+    name: bi_net
