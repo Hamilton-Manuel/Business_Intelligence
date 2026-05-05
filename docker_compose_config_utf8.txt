@@ -1,0 +1,110 @@
+﻿name: business_intelligence
+services:
+  app:
+    container_name: bi_app
+    depends_on:
+      grafana:
+        condition: service_started
+        required: true
+    image: nginx:alpine
+    networks:
+      bi_net: null
+    ports:
+      - mode: ingress
+        target: 80
+        published: "8080"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: E:\Desarrollo_WEB\Business_Intelligence\app
+        target: /usr/share/nginx/html
+        read_only: true
+        bind:
+          create_host_path: true
+  grafana:
+    container_name: bi_grafana
+    depends_on:
+      sqlserver:
+        condition: service_started
+        required: true
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: Admin_2026_Grafana
+      GF_SECURITY_ADMIN_USER: admin
+      GRAFANA_DS_DB: AdventureWorksDW2022
+      GRAFANA_DS_HOST: sqlserver:1433
+      GRAFANA_DS_NAME: AdventureWorksDW2022
+      GRAFANA_DS_PASSWORD: Grafana_2026_Lectura
+      GRAFANA_DS_USER: grafana_user
+      TZ: America/Guatemala
+    image: grafana/grafana:latest
+    networks:
+      bi_net: null
+    ports:
+      - mode: ingress
+        target: 3000
+        published: "3000"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: E:\Desarrollo_WEB\Business_Intelligence\grafana\data
+        target: /var/lib/grafana
+        bind:
+          create_host_path: true
+      - type: bind
+        source: E:\Desarrollo_WEB\Business_Intelligence\grafana\provisioning\datasources
+        target: /etc/grafana/provisioning/datasources
+        bind:
+          create_host_path: true
+      - type: bind
+        source: E:\Desarrollo_WEB\Business_Intelligence\grafana\provisioning\dashboards
+        target: /etc/grafana/provisioning/dashboards
+        bind:
+          create_host_path: true
+      - type: bind
+        source: E:\Desarrollo_WEB\Business_Intelligence\grafana\dashboards
+        target: /var/lib/grafana/dashboards
+        bind:
+          create_host_path: true
+  sqlserver:
+    container_name: bi_sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: 1234ASD1.
+      TZ: America/Guatemala
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    networks:
+      bi_net: null
+    ports:
+      - mode: ingress
+        target: 1433
+        published: "1433"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: E:\Desarrollo_WEB\Business_Intelligence\mssql\data
+        target: /var/opt/mssql/data
+        bind:
+          create_host_path: true
+      - type: bind
+        source: E:\Desarrollo_WEB\Business_Intelligence\mssql\log
+        target: /var/opt/mssql/log
+        bind:
+          create_host_path: true
+      - type: bind
+        source: E:\Desarrollo_WEB\Business_Intelligence\mssql\secrets
+        target: /var/opt/mssql/secrets
+        bind:
+          create_host_path: true
+      - type: bind
+        source: E:\Desarrollo_WEB\Business_Intelligence\mssql\backups
+        target: /var/opt/mssql/backups
+        bind:
+          create_host_path: true
+networks:
+  bi_net:
+    name: bi_net
+
